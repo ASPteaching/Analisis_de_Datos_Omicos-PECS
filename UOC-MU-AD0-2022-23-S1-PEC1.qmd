@@ -1,0 +1,118 @@
+---
+title: |
+  ![](images/uoc_masterbrand_2linies_positiu.png){width=5in} 
+  
+  Análisis de datos Ómicos (M0-157)<br> Primera prueba de evaluación continua.
+format:
+  html:
+    toc: true
+    theme: cosmo
+    self-contained: true
+---
+
+```{r setup, echo=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=FALSE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+**Fecha de publicación del enunciado: 31/10/2022**
+
+**Fecha límite para presentar la PEC: 16/11/2022**[^1]
+
+[^1]: La fecha de entrega es la que se indica en el enunciado de la PEC. En caso de no coincidir con la indicada en el aula, ésta será la que predomine.
+
+## Presentación y objetivos
+
+Esta PEC completa la introducción a las ómicas mediante un ejercicio de repaso y ampliación que nos permite introducirnos a una de las herramientas que trabajaremos más en este curso, el conjunto de paquetes para análisis de datos ómicos conocido como Bioconductor.
+
+No tenéis que pensar en la PEC como algo que haréis tras completar los tres primeros módulos sino como unos ejercicios que os servirán, sí, para repasar y para ser evaluados, pero también para aprender conceptos nuevos que se han introducido, pero no practicado antes.
+
+Para poder entender y llevar a cabo esta primera parte, tenéis que familiarizaros con [Bioconductor](http://bioconductor.org) y con el paquete `Biobase`, en el que se implementan los contenedores de datos ómicos denominados `expressionSets`. Para ello, disponéis de los siguientes materiales:
+- Dos vídeos que he preparado sobre Bioconductor, disponibles en el aula (con la PEC) y en el [documento de google drive con enlace a los materiales](https://docs.google.com/document/d/1scgOdmUpahptH_VNCMs8-EdDQ7vFRruDuiDzDECX5dY/edit?usp=sharing)
+- Un caso de uso de introducción a Bioconductor **que he actualizado para que se complemente bien con el Caso de Introducción a la Exploración de microarrays, que he actualizado también**. Podéis descargarlos del mismo documento de google drive o directamente de github con los siguientes enlaces:
+- [Omics_Data_Analysis-Case_Study_0-Introduction_to_BioC](https://github.com/ASPteaching/Omics_Data_Analysis-Case_Study_0-Introduction_to_BioC). 
+
+Mi consejo es que **hagáis esto antes de empezar la PEC.**
+
+## Descripción de la PEC
+
+El objetivo de esta PEC es que seleccionéis un estudio de microarrays de la lista disponible en la tabla del final del documento, correspondiente al archivo "GEOdatasetsUpdatedNov2022.xls" y, tras descargarlo usando el paquete `GEOquery` llevéis a cabo un estudio exploratorio *similar*
+al que se hacia en el caso de estudio del primer debate que, recordad, estaba disponible, **actualizado** en: [Analisis_de_datos_omicos-Ejemplo_0-Microarrays](https://github.com/ASPteaching/Analisis_de_datos_omicos-Ejemplo_0-Microarrays)
+
+En la práctica esto significa que debéis:
+
+1. Familiarizaros con Bioconductor, los ExpressionSets y GEOquery, usando los materiales que os indico en la sección anterior.
+2. Seleccionar el dataset con el que trabajaréis de la lista que os proporcionamos 
+   - *Han habido dos versiones de esta lista debido a un error en su preparación. Aunque la lista correcta es la última, si ya lo hubierais hecho con un dataset anterior indicadlo y no habrá ningún problema, porque en principio el proceso funcionaría con casi cualquier dataset de GEO* . 
+3. Leer los datos desde GEO
+   - Para descargar los datos debéis utilizar el paquete `GEOquery` que os permitirá obtenerlos un `expressionSet` con los datos normalizados (los mismos que la matriz de expresión del ejemplo 0, pero ya en formato de un expressionSet)
+4. Determinar su estructura y el diseño del estudio que los ha generado.
+   - La información del experimento podéis descargarla también de GEO, bien con GEOquery si proporcionáis el identificador de dataset GDSxxxx o accediendo a la página del estudio.
+5. Realizar un análisis exploratorio univariante y multivariante similar al del caso de estudio.
+   - Aquí podéis ser creativos, pero si no deseáis serlo os bastará con seguir el código del ejemplo de análisis. **OJO**, debéis seguir únicamente **el punto 3 del estudio. "Exploratory Analysis**. La lectura la haréis diferente, es decir con GEOquery, y la parte 4 de Selección de Genes, **no tenéis que hacerla**
+6. Elaborar un informe de vuestro trabajo usando Rmarkdown. Aquí tenéis que tener en cuenta el contenido y la construcción.
+    - En cuanto al contenido el informe tiene que tener la estructura habitual de cualquier trabajo: (i) Tabla de contenidos, (ii) Introducción y Objetivos, (iii) Métodos, (iv) Resultado y (v) Apéndices. En el apéndice podéis poner el código R que habréis utilizado para vuestro trabajo y así será un único documento.
+    - En cuanto a la construcción debéis preparar documento en Rmarkdown que genere el informe en HTML y que debéis imprimir a pdf para entregarlo.
+7. Tenéis que entregar un único archivo en formato pdf con la estructura anterior y cuyo nombre sea la concatenación de vuestros apeelidos, el nombre y la palabra PEC1, **sin acentos ni espacios en blanco**.
+    - Por ejemplo, en mi caso el arcgivo que entregaria se denominaria "Sanchez_Pla_Alex-PEC1.pdf"
+
+<!-- ### Cambios respecto del caso de estudio -->
+
+<!-- -   En el ejemplo del primer debate, además de la exploración multivariante, se lleva a cabo una selección de genes. **Aquí no tenéis que hacerlo**, porque ésta precisamente será uno de los objetivos de la siguiente PEC -->
+
+<!-- - La lectura y el manejo de los datos del ejemplo se lleva a cabo usando funciones básicas de R. El objetivo de la PEC es que **no lo hagáis así** sino utilizando funciones de Bioconductor. En concreto: -->
+
+<!--   - Debéis utilizar la función `getGEO` del paquete `GEOquery` para descargar los datos. -->
+
+<!--   - Debéis utilizar las funciones `exprs` y/o `pData` para acceder a los datos y los metadatos.  -->
+
+<!--   Aunque esto no tenga sentido en estos momentos lo tendrá una vez hayáis trabajado con la introducción a Bioconductor del caso.  -->
+
+## Recursos
+
+Los recursos para la solución de la PEC son los que se han proporcionado en el aula para las tres primeras unidades, es decir los materiales del curso y casos de estudio.
+
+## Criterios de valoración
+
+Tal como se indica en el plan docente, cada PEC vale el 30% de la nota. 
+
+Ahora bien, y como cosa importante, recordad que la PEC en si misma es un ejercicio de síntesis y aprendizaje en la que intenta valorar vuestra capacidad para resolver un problema muy parecido a los que se encuentra un/a bioinformática/a en su día a día. Esto quiere decir que para más de uno de los pasos que debéis realizar no hay una solución única. Plantead vuestra propia solución y explicad porqué creéis que es la adecuada. Entre otras cosas valoraremos:
+
+- Capacidad de definir correctamente los objetivos a alcanzar
+- Capacidad de organizar el análisis, obtención de los datos, preparación de los archivos etc.
+- Dominio adecuado de las herramientas propias del tema (R, Rmarkdown, BioC) 
+- Capacidad de explicar qué y porqué se hace en cada paso.
+- Capacidad de interpretar los resultados obtenidos.
+- Capacidad de discutir las posibles limitaciones del estudio.
+- Presentación del trabajo en un documento legible y bien organizado.
+
+## Código de honor
+
+Cuando presentáis ejercicios individuales os adherís al código de honor de la UOC, con el que os comprometéis a no compartir vuestro trabajo con otros compañeros o a solicitar de su parte que ellos lo hagan. Asimismo, aceptáis que, de proceder así, es decir, en caso de copia probada, la calificación total de la PEC será de cero, independientemente 
+
+
+# Apéndice: Datasets
+
+```{r, echo=FALSE}
+library(readxl)
+library(magrittr)
+GEOdatasets_updatedNov2022 <- read_excel("GEOdatasets_updatedNov2022.xls")
+GEOdatasets_updatedNov2022 %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
+
+
+
+
+
+

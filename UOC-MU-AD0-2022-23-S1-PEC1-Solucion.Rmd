@@ -1,0 +1,268 @@
+---
+title: |
+  ![](images/uoc_masterbrand_2linies_positiu.png){width=5in} 
+  
+  | Análisis de datos ómicos (M0-157)
+  | Primera prueba de evaluación continua.
+output:
+   html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    self-contained: true
+bibliography: "ADOreferences.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=FALSE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+**Fecha de publicación del enunciado: 31/10/2022**
+
+**Fecha límite para presentar la PEC: 16/11/2022**[^1]
+
+[^1]: La fecha de entrega es la que se indica en el enunciado de la PEC. En caso de no coincidir con la indicada en el aula, ésta será la que predomine.
+
+
+# Introducción
+
+_La solución de la PEC tiene dos objetivos principales:_ 
+  _- Por un lado, debe mostrar un modelo de "resolución" de las preguntas planteadas que sirva de ejemplo de como se podía haber resuelto las preguntas y de comparación con vuestra propia solución._
+  _- Además debe contener explicaciones sobre el desarrollo de la PEC, que, normalmente no formaran parte de un informe, como es el caso de esta introducción._
+  _Para hacerlo sencillo he dejado los comentarios, es decir nuestras opiniones o valoraciones.  en cursiva y lo que es la solución estricta, es decir lo que debe parecerse a vuestra resolución, en formato normal._
+  
+_Tal como se os pedía, el código no aparecerá dentro del texto, aunque con fines didácticos lo podréis mostrar cuando así lo deseéis. Esto se puede hacer con un simple comando de Rmarkdown_
+
+_En este documento se presenta una solución tipo, es decir no se valoran todos los casos sino que se resuelve uno. Eventualmente se añadirán comentarios sobre aquellos datasets que puedan haber dado problemas o que tengan especificidades concretas._
+
+## Objetivos
+
+El objetivo principal de este trabajo es realizar un análisis exploratorio de unos datos de microarrays, descargados de la base de datos [Gene Expression Omnibus (GEO)](https://www.ncbi.nlm.nih.gov/geo/) utilizando el programa estadístico R y las librerías para análisis de datos ómicos integradas en Bioconductor.
+En concreto se requiere que los datos descargados se almacenen en un objeto de clase `ExpressionSet` y que se acceda a ellos a través de este objeto.
+ 
+# Materiales y Métodos
+ 
+Los datos con los que se trabajará se descargarán de GEO utilizando el paquete [GEOquery](https://bioconductor.org/packages/release/bioc/html/GEOquery.html) de Bioconductor. Este paquete permite  descargar los datos indicados (por un identificador GSE o GDS) y crear con ellos una estructura de datos del tipo `expressionSet` que contiene una matriz de datos preprocesados (habitualmente normalizados, así como una tabla con información sobre covariables y tras aspectos del experimento.
+
+La exploración se llevará a cabo siguiendo la plantilla de un caso de estudio, [Analisis_de_datos_omicos-Ejemplo_0-Microarrays](https://github.com/ASPteaching/Analisis_de_datos_omicos-Ejemplo_0-Microarrays) y por lo tanto está relativamente bien pautada. Básicamente dicha exploración consistirá en:
+- Análisis univariante de los datos, mediante boxplots y/o histogramas para estudiar la forma general de los mismos.
+- Análisis multivariante de los datos, mediante Análisis de Componentes Principales y Agrupamiento Jerárquico, para determinar si los grupos que aparezcan (en caso de hacerlo) parecen relacionarse con las fuentes de variabilidad del estudio o, si por el contrario, podrían haber otras fuentes de variabilidad como efectos batch.
+
+Las técnicas mencionadas son muy habituales en estadística y bioinformática por lo que no nos entretendremos en explicarlas. Pueden verse resumidas en los materiales de la asignatura (documento "Módulo 1. Preliminares").
+
+## Selección de los datos para el estudio
+
+Los datos para este estudio se han tenido que escoger de entre una lista de estudios depositados en GEO. Aunque es posible escoger el que se desee, evitando datasets problemáticos, una forma "neutra" de hacerlo es sorteando el identificador.
+
+_El registro de la fila 27 da problemas al descargarlo por lo que se suprime_
+
+```{r cargaDatasets}
+library(readxl)
+GEOdat <- read_excel("GEOdatasets_updatedNov2022.xls")
+GEOdat <- GEOdat[-27,]
+```
+
+Fijamos una semilla para el generador interno de números aleatorios, lo que nos asegura que, mientras no la cambiemos, se repetirá la asignación del estudio.
+
+```{r seleccionDatos}
+set.seed (234567)
+seleccion<- sample(1:nrow(GEOdat),1)
+GEOSerie<- GEOdat[seleccion,2]
+GEODataset <- GEOdat[seleccion,1]
+```
+
+Una vez escogida una fila de forma aleatoria es posible descargar los datos a partir del "DataSet" o de la "Serie". 
+- En el primer caso se obtiene una lista con un `expressionSet` por cada posible DataSet del estudio. 
+- En el segundo se obtiene un objeto de clase `GDS`, que contiene campos adicionales con información sobre el experimento.
+
+
+_Para este estudio hemos seleccionado el resultado de la selección  aleatoria, `r GEOSerie`._
+
+# Resultados
+
+_Este apartado contiene embebido el código de análisis utilizado. Esto permite seguir los principios de la "investigación reproducible" y "programación literata" en la que el informe se integra con el análisis. El código se mantiene oculto para facilitar la lectura por parte de personas no familiarizadas con R_
+
+## Estructura de los datos y del estudio
+
+### Opción 1: Utilizar la clase `GDS` y trabajar con el resultado de descargar con el identificador `GDS`
+
+Aunque podríamos trabajar únicamente con el objeto de clase "GDS" los utilizaremos ambos.
+
+_Para este ejercicio utilizaremos el `ExpressionSet` obtenido a partir de la serie._
+
+```{r}
+library(GEOquery)
+myGSE <- getGEO(GEOSerie, AnnotGPL=TRUE)
+myGDS <- getGEO (GEODataset, AnnotGPL=TRUE)
+```
+
+La clase 'GDS' contiene 
+- información sobre el estudio en forma de metadatos que podemos utilizar para crear una tabla resumen de la información del estudio.
+- Una tabla con información sobre grupos y muestras en cada grupo
+- La matriz de expresión, codificada de forma no evidente, aunque puede extraerse creando un `expressionSet`
+
+```{r}
+Meta(myGDS)
+Columns(myGDS)
+Table(myGDS)
+```
+
+Con algo de trabajo es posible crear una tabla con la información de los Metadatos.
+
+```{r}
+infoDF <- data.frame(matrix(rep(NA, 2*length(Meta(myGDS))), ncol=2))
+for (i in 1:length(Meta(myGDS))){
+  infoDF[i,1] =names(Meta(myGDS))[i]
+  infoDF[i,2] =Meta(myGDS)[i]
+}
+colnames(infoDF) = c("Campo", "Descripción")
+library(dplyr)
+infoDF %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
+
+Para disponer de la tabla de grupos, así como de los valores de expresión basta con convertir el objeto `myGDS` a un objeto de clase `ExpressionSet`.
+
+```{r}
+myeSet <- GDS2eSet(myGDS)
+pData(myeSet) %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
+
+
+### Opción 2: Trabajar con el resultado de descargar con el identificador `GSE`
+
+Antes de empezar a trabajar con los datos estos se extraen de la lista que los contiene (en forma de objeto de clase `ExpressionSet`).
+
+El objeto contiene la matriz de expresión, las posibles covariables e información del estudio almacenada de forma poco intuitiva, puesto que se repite para cada muestra. 
+
+La matriz de expresión y la información fenotípica pueden extraerse con las funciones `exprs` y `pData` respectivamente.
+
+```{r}
+eSet <- myGSE[[1]]
+class(eSet)
+```
+
+En este caso el objeto no dispone de un tabla como la del caso anterior por lo que debemos elaborarla a partir de una **inspección detallada** del objeto `pData(eSet)`. Como puede verse parece que las únicas columnas con información sobre los grupos experimentales parecen ser la 2 y la 8
+
+```{r}
+pData(eSet)[,c(1,8)]
+```
+- La columna "source_name_ch1" sugiere que hay dos grupos "treated/untreated".
+- La columna "title" no es muy explicativa y sugiere la existencia de otra clasificación superpuesta PC3/final.
+
+De momento se crea una etiqueta para cada muestra que contenga ambas informaciones
+
+```{r}
+shortName<- paste(substr(pData(eSet)$title,3,5),
+                  c(rep("untr", 4), rep("treat",4)),
+                    substr(pData(eSet)$title,1,1),
+                    substr(rownames(pData(eSet)),6,8), sep="_")
+colores<- c(rep("red", 4), rep("blue", 4))
+pData(eSet)<- data.frame(shortName, colores, pData(eSet)[, c(1,8)])
+colnames(exprs(eSet)) <- rownames(pData(eSet) ) <- pData(eSet)$shortName
+```
+
+_A pesar de que parece más intuitivo trabajar con la información extraída del objeto de clase "GDS", en lo que resta del ejercicio se utilizara la información extraída de la lista generada al descargar el objeto desde el código de serie ("GSExxxx"). Obviamente ambos dan lugar a los mismos resultados._
+
+## Análisis exploratorio de los datos
+
+Una vez extraídos los datos y la información podemos proceder a realizar una exploración básica, similar a la del caso de estudio.
+
+```{r}
+boxplot(exprs(eSet), las=2, col=pData(eSet)$colores, 
+#        names=pData(eSet)$shortName, 
+        cex.axis=0.8, main="Distribucion de los valores de expresión")
+```
+
+Los datos son claramente asimétricos, lo que sugiere que puede tener sentido trabajar con los mismos datos en escala logarítmica.
+
+```{r}
+boxplot(log(exprs(eSet)), las=2, col=pData(eSet)$colores, 
+#        names=pData(eSet)$shortName, 
+        cex.axis=0.8, main="Distribucion de los valores de log(expresión)")
+```
+
+
+Claramente, a la vista del segundo gráfico, **es mejor trabajar con los datos transformados logarítmicamente** 
+
+### Exploración multivariante
+
+Un análisis en componentes principales puede facilitar la visualización de los datos en dimensión reducida y, sobretodo, detectar posibles patrones que no se detecten a simple vista.
+
+El PCA transforma las variables originales de forma que las nuevas componentes (las variables transformadas) resultan tener dos propiedades muy interesantes:
+- Son independientes entre ellas, es decir explican propiedades distintas de los datos).
+- Cada componente explica un porcentaje de variabilidad mayor que la anterior, con lo que suele bastar con las dos o tres primeras componentes para obtener una visualización de los datos en dimensión reducida.
+
+En primer lugar se realiza el cálculo de las componentes principales:
+
+```{r}
+resPC <- prcomp(t(exprs(eSet)))
+summary(resPC)
+```
+Las dos primeras componentes explican un 94% de la variabilidad de los datos, con lo que no precisaremos de ninguna otra.
+
+Para la visualización de los resultados podemos utilizar el paquete `ggfortify` que  genera un gráfico en `ggplot` en función del objeto que se le proporcione.
+
+```{r}
+if (!(require(ggfortify))) install.packages("ggfortify", dep=TRUE)
+library(ggfortify)
+autoplot(resPC, data=t(exprs(eSet)), label=TRUE, label.size=3, colour=factor(pData(eSet)$colores))
+```
+
+El resultado muestra que, en contra de lo que uno podría esperar, lo que diferencia dos grupos es la característica "fin/PC3", que se encuentra claramente asociada con la primera componente. 
+
+La diferencia entre tratados y no tratados no se asocia, al menos en el grupo PC3, con la segunda.
+
+El diseño, además está desbalanceado, con lo que, en caso de querer realizar un estudio comparativo con los dos factores no se podría realizar en condiciones óptimas.
+
+Esta visualización se confirma al realizar un cluster jerárquico y visualizarlo con un dendrograma
+
+```{r}
+distMat <- dist(t(log(exprs(eSet))))
+hc <-hclust(distMat) 
+plot(hclust(distMat))
+```
+
+
+## Discusión
+
+El análisis exploratorio, realizado tras tomar logaritmo sobre los datos, ha puesto de manifiesto que existen dos fuentes de variación distintas. La mayor, relacionada con el origen de las muestras, no estaba especificada en el diseño del estudio. El efecto del tratamiento no aparece como la principal fuente de variabilidad lo que puede, probablemente, atribuirse a la confusión entre ambas fuentes.
+
+Aparte de este problema inesperado, los datos no presentan evidencias de problemas: las distribuciones de las muestras son similares y no hay valores faltantes o cero, lo que se habría evidenciado al tomar logaritmos, por lo que en una situación real se procedería a investigar si es posible eliminar lo que aparenta ser un efecto batch y llevar a cabo el análisis.
+
+# Apéndice: Datasets
+
+```{r, echo=FALSE}
+require(readxl)
+library(magrittr)
+GEOdatasets_updatedNov2022 <- read_excel("GEOdatasets_updatedNov2022.xls")
+GEOdatasets_updatedNov2022 %>% kableExtra::kable() %>% kableExtra::kable_styling()
+```
+
+# Apendice: Código R
+
+_Para extraer el código R se ha utilizado la instrucción `knitr::purl("UOC-MU-AD0-2022-23-S1-PEC1-Solucion.Rmd")` que ha creado el archivo "UOC-MU-AD0-2022-23-S1-PEC1-Solución.R". Dicho archivo se incluye automáticamente en un ultimo "chiunnk" de código. Para evitar que se ejecute, se asigna el valor FALSE a la opción "eval" del código_
+
+```{r, file="UOC-MU-AD0-2022-23-S1-PEC1-Solucion.R", eval=FALSE}
+
+```
+
+
+
+
+
+
